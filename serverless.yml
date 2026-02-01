@@ -1,0 +1,50 @@
+service: back-sorte
+
+provider:
+  name: aws
+  runtime: provided.al2
+  region: ${env:AWS_REGION, 'us-east-1'}
+  httpApi:
+    payload: '2.0'
+
+functions:
+  users:
+    handler: bootstrap
+    package:
+      artifact: back_sorte_lambdas/users/lambda.zip
+    events:
+      - httpApi:
+          method: ANY
+          path: /users/{proxy+}
+  login:
+    handler: bootstrap
+    package:
+      artifact: back_sorte_lambdas/login/lambda.zip
+    events:
+      - httpApi:
+          method: ANY
+          path: /login/{proxy+}
+  donation:
+    handler: bootstrap
+    package:
+      artifact: back_sorte_lambdas/donation/lambda.zip
+    events:
+      - httpApi:
+          method: ANY
+          path: /donation/{proxy+}
+  pix:
+    handler: bootstrap
+    package:
+      artifact: back_sorte_lambdas/pix/lambda.zip
+    events:
+      - httpApi:
+          method: ANY
+          path: /pix/{proxy+}
+  contact:
+    handler: bootstrap
+    package:
+      artifact: back_sorte_lambdas/contact/lambda.zip
+    events:
+      - httpApi:
+          method: ANY
+          path: /contact/{proxy+}
