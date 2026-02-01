@@ -16,3 +16,18 @@ cd "c:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lam
 terraform init
 terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lambda_zip=../lambda.zip"
 ```
+
+## Exemplo de uso (requests)
+```bash
+# Criar doacao (multipart)
+curl -X POST "$BASE_URL/donation" \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "name=Minha campanha" \
+  -F "valor=100" \
+  -F "texto=Texto da doacao" \
+  -F "area=Saude" \
+  -F "image=@./foto.jpg"
+
+# Listar doacoes por usuario
+curl "$BASE_URL/donation/list?id_user=USER_ID&page=1&limit=10"
+```

@@ -16,3 +16,20 @@ cd "c:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lam
 terraform init
 terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lambda_zip=../lambda.zip"
 ```
+
+## Exemplo de uso (requests)
+```bash
+# Criar usuario
+curl -X POST "$BASE_URL/users" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Joao","email":"joao@email.com","password":"123456","cpf":"12345678900"}'
+
+# Alterar senha (JWT)
+curl -X POST "$BASE_URL/users/passwordChange" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"old_password":"123456","new_password":"654321"}'
+
+# Buscar imagem de perfil
+curl "$BASE_URL/users/ProfileImage/USER_ID"
+```

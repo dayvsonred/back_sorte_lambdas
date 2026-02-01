@@ -16,3 +16,11 @@ cd "c:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lam
 terraform init
 terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lambda_zip=../lambda.zip"
 ```
+
+## Exemplo de uso (requests)
+```bash
+curl -X POST "$BASE_URL/login" \
+  -H "Authorization: Basic QVBJX05BTUVfQUNDRVNTOkFQSV9TRUNSRVRfQUNDRVNT" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password&username=joao@email.com&password=123456"
+```

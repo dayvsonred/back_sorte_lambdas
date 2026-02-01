@@ -16,3 +16,10 @@ cd "c:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lam
 terraform init
 terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lambda_zip=../lambda.zip"
 ```
+
+## Exemplo de uso (requests)
+```bash
+curl -X POST "$BASE_URL/contact/mensagem" \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"Joao","email":"joao@email.com","mensagem":"Oi","ip":"1.1.1.1","location":"BR","token":"x"}'
+```
