@@ -45,7 +45,6 @@ resource "aws_lambda_function" "contact" {
 
   environment {
     variables = {
-      AWS_REGION     = var.aws_region
       DYNAMODB_TABLE = var.dynamodb_table
     }
   }

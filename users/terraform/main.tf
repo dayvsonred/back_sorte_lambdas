@@ -50,7 +50,6 @@ resource "aws_lambda_function" "users" {
 
   environment {
     variables = {
-      AWS_REGION      = var.aws_region
       DYNAMODB_TABLE  = var.dynamodb_table
       AWS_BUCKET_NAME = var.aws_bucket_name
       AWS_BUCKET_NAME_IMG_DOACAO = var.aws_bucket_name_img_doacao

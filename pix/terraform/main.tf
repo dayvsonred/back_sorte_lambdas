@@ -45,7 +45,6 @@ resource "aws_lambda_function" "pix" {
 
   environment {
     variables = {
-      AWS_REGION     = var.aws_region
       DYNAMODB_TABLE = var.dynamodb_table
       CLIENT_ID      = var.efi_client_id
       CLIENT_SECRET  = var.efi_client_secret
