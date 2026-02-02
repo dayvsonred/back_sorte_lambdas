@@ -33,3 +33,38 @@ curl -X POST "$BASE_URL/users/passwordChange" \
 # Buscar imagem de perfil
 curl "$BASE_URL/users/ProfileImage/USER_ID"
 ```
+
+
+## Exemplo de uso (requests)
+```bash
+
+curl -X POST "https://bw3zzn1l2d.execute-api.us-east-1.amazonaws.com/users" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Lucas",
+    "email": "lucas_dell01@gmail.com",
+    "password": "123456",
+    "cpf": "12345678900"
+  }'
+
+
+
+  {
+  "version": "2.0",
+  "routeKey": "POST /users",
+  "rawPath": "/users",
+  "rawQueryString": "",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/users"
+    }
+  },
+  "isBase64Encoded": false,
+  "body": "{\"name\":\"Lucas\",\"email\":\"lucas_dell01@gmail.com\",\"password\":\"123456\",\"cpf\":\"12345678900\"}"
+}
+
+```

@@ -32,3 +32,32 @@ curl -X POST "$BASE_URL/login" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "grant_type=password&username=joao@email.com&password=123456"
 ```
+
+## Exemplo de uso (requests)
+```bash
+curl -X POST "https://vo0eaal24c.execute-api.us-east-1.amazonaws.com/login"   -H "Authorization: Basic QVBJX05BTUVfQUNDRVNTOkFQSV9TRUNSRVRfQUNDRVNT"  -H "Content-Type: application/x-www-form-urlencoded"  -d "grant_type=password&username=lucas_dell@gmail.com&password=123456"
+```
+
+
+## Exemplo de uso (Teste WEB)
+```bash
+
+{
+  "version": "2.0",
+  "routeKey": "POST /login",
+  "rawPath": "/login",
+  "rawQueryString": "",
+  "headers": {
+    "authorization": "Basic QVBJX05BTUVfQUNDRVNTOkFQSV9TRUNSRVRfQUNDRVNT",
+    "content-type": "application/x-www-form-urlencoded"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/login"
+    }
+  },
+  "isBase64Encoded": false,
+  "body": "grant_type=password&username=lucas_dell@gmail.com&password=123456"
+}
+```
