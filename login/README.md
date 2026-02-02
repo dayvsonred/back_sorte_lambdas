@@ -27,6 +27,9 @@ terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lam
 
 ## Exemplo de uso (requests)
 ```bash
+# API Gateway (HTTP API)
+BASE_URL="https://rm0t2sapef.execute-api.us-east-1.amazonaws.com"
+
 curl -X POST "$BASE_URL/login" \
   -H "Authorization: Basic QVBJX05BTUVfQUNDRVNTOkFQSV9TRUNSRVRfQUNDRVNT" \
   -H "Content-Type: application/x-www-form-urlencoded" \
@@ -35,7 +38,10 @@ curl -X POST "$BASE_URL/login" \
 
 ## Exemplo de uso (requests)
 ```bash
-curl -X POST "https://vo0eaal24c.execute-api.us-east-1.amazonaws.com/login"   -H "Authorization: Basic QVBJX05BTUVfQUNDRVNTOkFQSV9TRUNSRVRfQUNDRVNT"  -H "Content-Type: application/x-www-form-urlencoded"  -d "grant_type=password&username=lucas_dell@gmail.com&password=123456"
+curl -X POST "https://rm0t2sapef.execute-api.us-east-1.amazonaws.com/login" \
+  -H "Authorization: Basic QVBJX05BTUVfQUNDRVNTOkFQSV9TRUNSRVRfQUNDRVNT" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password&username=lucas_dell01@gmail.com&password=123456"
 ```
 
 
