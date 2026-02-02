@@ -58,6 +58,6 @@ curl -X POST "https://vo0eaal24c.execute-api.us-east-1.amazonaws.com/login"   -H
     }
   },
   "isBase64Encoded": false,
-  "body": "grant_type=password&username=lucas_dell@gmail.com&password=123456"
+  "body": "grant_type=password&username=lucas_dell01@gmail.com&password=123456"
 }
 ```

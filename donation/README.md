@@ -20,7 +20,10 @@ terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lam
 ## Exemplo de uso (requests)
 ```bash
 # API Gateway (HTTP API)
-BASE_URL="https://obx90nm3e5.execute-api.us-east-1.amazonaws.com"
+# Caso seu endpoint tenha base path "/donation", use:
+BASE_URL="https://obx90nm3e5.execute-api.us-east-1.amazonaws.com/donation"
+# Se o endpoint nao tiver base path, use:
+# BASE_URL="https://obx90nm3e5.execute-api.us-east-1.amazonaws.com"
 TOKEN="SEU_JWT_AQUI"
 
 # Criar doacao (multipart)
@@ -74,6 +77,29 @@ curl -X DELETE "$BASE_URL/donation/DONATION_ID" \
 ## Exemplo de evento JSON (chamando a Lambda direto)
 Use no teste da AWS Console (Test event) ou via CLI com o payload abaixo.
 
+### POST /donation (multipart)
+```json
+{
+  "version": "2.0",
+  "routeKey": "POST /donation",
+  "rawPath": "/donation",
+  "headers": {
+    "content-type": "multipart/form-data; boundary=----boundary",
+    "authorization": "Bearer SEU_JWT_AQUI"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/donation",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "aws-lambda-test"
+    }
+  },
+  "body": "LS0tLS1ib3VuZGFyeQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJuYW1lIg0KDQpNaW5oYSBjYW1wYW5oYQ0KLS0tLS1ib3VuZGFyeQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJ2YWxvciINCg0KMTAwDQotLS0tLWJvdW5kYXJ5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9InRleHRvIg0KDQpUZXh0byBkYSBkb2FjYW8NCi0tLS0tYm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iYXJlYSINCg0KU2F1ZGUNCi0tLS0tYm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0iaW1hZ2UiOyBmaWxlbmFtZT0iZm90by5qcGciDQpDb250ZW50LVR5cGU6IGltYWdlL2pwZWcNCg0KLi4uQklOQVJZREFUQS4uLg0KLS0tLS1ib3VuZGFyeS0t",
+  "isBase64Encoded": true
+}
+```
+
 ### GET /donation/list
 ```json
 {
@@ -91,6 +117,118 @@ Use no teste da AWS Console (Test event) ou via CLI com o payload abaixo.
       "path": "/donation/list",
       "sourceIp": "127.0.0.1",
       "userAgent": "curl/8.0"
+    }
+  },
+  "isBase64Encoded": false
+}
+```
+
+### DELETE /donation/{id}
+```json
+{
+  "version": "2.0",
+  "routeKey": "DELETE /donation/{id}",
+  "rawPath": "/donation/DONATION_ID",
+  "pathParameters": {
+    "id": "DONATION_ID"
+  },
+  "headers": {
+    "authorization": "Bearer SEU_JWT_AQUI"
+  },
+  "requestContext": {
+    "http": {
+      "method": "DELETE",
+      "path": "/donation/DONATION_ID",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "aws-lambda-test"
+    }
+  },
+  "isBase64Encoded": false
+}
+```
+
+### GET /donation/link/{nome_link}
+```json
+{
+  "version": "2.0",
+  "routeKey": "GET /donation/link/{nome_link}",
+  "rawPath": "/donation/link/@minha-campanha",
+  "pathParameters": {
+    "nome_link": "@minha-campanha"
+  },
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/donation/link/@minha-campanha",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "aws-lambda-test"
+    }
+  },
+  "isBase64Encoded": false
+}
+```
+
+### GET /donation/mensagem
+```json
+{
+  "version": "2.0",
+  "routeKey": "GET /donation/mensagem",
+  "rawPath": "/donation/mensagem",
+  "rawQueryString": "id=DONATION_ID&page=1&limit=10",
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/donation/mensagem",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "aws-lambda-test"
+    }
+  },
+  "isBase64Encoded": false
+}
+```
+
+### GET /donation/closed/{id}
+```json
+{
+  "version": "2.0",
+  "routeKey": "GET /donation/closed/{id}",
+  "rawPath": "/donation/closed/DONATION_ID",
+  "pathParameters": {
+    "id": "DONATION_ID"
+  },
+  "headers": {
+    "authorization": "Bearer SEU_JWT_AQUI"
+  },
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/donation/closed/DONATION_ID",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "aws-lambda-test"
+    }
+  },
+  "isBase64Encoded": false
+}
+```
+
+### GET /donation/rescue/{id}
+```json
+{
+  "version": "2.0",
+  "routeKey": "GET /donation/rescue/{id}",
+  "rawPath": "/donation/rescue/DONATION_ID",
+  "pathParameters": {
+    "id": "DONATION_ID"
+  },
+  "headers": {
+    "authorization": "Bearer SEU_JWT_AQUI"
+  },
+  "requestContext": {
+    "http": {
+      "method": "GET",
+      "path": "/donation/rescue/DONATION_ID",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "aws-lambda-test"
     }
   },
   "isBase64Encoded": false
@@ -116,6 +254,28 @@ Use no teste da AWS Console (Test event) ou via CLI com o payload abaixo.
   },
   "body": "{\"id_doacao\":\"DONATION_ID\",\"id_user\":\"USER_ID\",\"visuaization\":true,\"donation_like\":false,\"love\":false,\"shared\":false}",
   "isBase64Encoded": false
+}
+```
+
+### POST /donation/createUserAndDonation (multipart)
+```json
+{
+  "version": "2.0",
+  "routeKey": "POST /donation/createUserAndDonation",
+  "rawPath": "/donation/createUserAndDonation",
+  "headers": {
+    "content-type": "multipart/form-data; boundary=----boundary"
+  },
+  "requestContext": {
+    "http": {
+      "method": "POST",
+      "path": "/donation/createUserAndDonation",
+      "sourceIp": "127.0.0.1",
+      "userAgent": "aws-lambda-test"
+    }
+  },
+  "body": "LS0tLS1ib3VuZGFyeQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJmdWxsTmFtZSINCg0KTm9tZSBDb21wbGV0bw0KLS0tLS1ib3VuZGFyeQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJjcGYiDQoNCjEyMzQ1Njc4OTAxDQotLS0tLWJvdW5kYXJ5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImVtYWlsIg0KDQp0ZXN0ZUBtYWlsLmNvbQ0KLS0tLS1ib3VuZGFyeQ0KQ29udGVudC1EaXNwb3NpdGlvbjogZm9ybS1kYXRhOyBuYW1lPSJzZW5oYSINCg0KMTIzNDU2DQotLS0tLWJvdW5kYXJ5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9InRpdHVsbyINCg0KTWluaGEgY2FtcGFuaGENCi0tLS0tYm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0ibWV0YSINCg0KMTUwLjAwDQotLS0tLWJvdW5kYXJ5DQpDb250ZW50LURpc3Bvc2l0aW9uOiBmb3JtLWRhdGE7IG5hbWU9ImNhdGVnb3JpYSINCg0KU2F1ZGUNCi0tLS0tYm91bmRhcnkNCkNvbnRlbnQtRGlzcG9zaXRpb246IGZvcm0tZGF0YTsgbmFtZT0idGV4dG8iDQoNClRleHRvIGRhIGRvYWNhbwpbYmFzZTY0IGltYWdlIGVtIGNhbXBvIGltYWdlXQ0KLS0tLS1ib3VuZGFyeS0t",
+  "isBase64Encoded": true
 }
 ```
 
