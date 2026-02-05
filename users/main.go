@@ -1,10 +1,12 @@
-﻿package main
+package main
 
 import (
 	"context"
 	"log"
+	"net/http"
 
 	"BACK_SORTE_GO/internal/app"
+	"BACK_SORTE_GO/internal/middleware"
 	"BACK_SORTE_GO/internal/users"
 
 	"github.com/aws/aws-lambda-go/lambda"
@@ -20,6 +22,10 @@ func main() {
 	}
 
 	router := mux.NewRouter()
+	router.Use(middleware.CorsMiddleware)
+	router.PathPrefix("/").Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
 	users.RegisterRoutes(router, a)
 
 	adapter := httpadapter.NewV2(router)
