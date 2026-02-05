@@ -21,6 +21,85 @@ type ContactRequest struct {
 	Token    string `json:"token"`
 }
 
+type ContactVisualizationRequest struct {
+	Page      string `json:"page"`
+	Timestamp string `json:"timestamp"`
+	Referrer  string `json:"referrer"`
+	Device    string `json:"device"`
+	Language  string `json:"language"`
+	IP        string `json:"ip"`
+	User      string `json:"user"`
+}
+
+func ContactHealthHandler() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		now := time.Now().UTC().Format(time.RFC3339)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{
+			"message":  "online",
+			"datetime": now,
+		})
+	}
+}
+
+func ContactVisualizationHandler(storeDDB *dynamo.Store) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var req ContactVisualizationRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "Erro ao decodificar JSON: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		page := strings.TrimSpace(req.Page)
+		if page == "" {
+			http.Error(w, "Campo page e obrigatorio", http.StatusBadRequest)
+			return
+		}
+
+		ts := strings.TrimSpace(req.Timestamp)
+		if ts == "" {
+			ts = time.Now().UTC().Format(time.RFC3339)
+		} else {
+			if _, err := time.Parse(time.RFC3339, ts); err != nil {
+				http.Error(w, "Campo timestamp invalido, use RFC3339", http.StatusBadRequest)
+				return
+			}
+		}
+
+		ip := strings.TrimSpace(req.IP)
+		if ip == "" {
+			ip = r.RemoteAddr
+		}
+
+		visID := uuid.NewString()
+		item := map[string]types.AttributeValue{
+			"PK":          dynamo.S(store.VisualizationPK(page)),
+			"SK":          dynamo.S("VIS#" + ts + "#" + visID),
+			"id":          dynamo.S(visID),
+			"page":        dynamo.S(page),
+			"timestamp":   dynamo.S(ts),
+			"referrer":    dynamo.S(req.Referrer),
+			"device":      dynamo.S(req.Device),
+			"language":    dynamo.S(req.Language),
+			"ip":          dynamo.S(ip),
+			"user":        dynamo.S(req.User),
+			"data_create": dynamo.S(time.Now().UTC().Format(time.RFC3339)),
+		}
+
+		if err := storeDDB.PutItem(r.Context(), item); err != nil {
+			http.Error(w, "Erro ao salvar visualizacao: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Visualizacao registrada com sucesso",
+			"id":      visID,
+		})
+	}
+}
+
 func ContactMensagemHandler(storeDDB *dynamo.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req ContactRequest

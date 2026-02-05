@@ -24,6 +24,8 @@ require (
 require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.32.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.11.17 // indirect
+	golang.org/x/net v0.21.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 )
 
 require (

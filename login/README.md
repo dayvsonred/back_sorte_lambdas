@@ -23,6 +23,12 @@ terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lam
 cd "c:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lambdas\login\terraform"
 terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lambda_zip=../lambda.zip" -var "jwt_secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 
+
+
+
+aws lambda update-function-code   --function-name back-sorte-login   --zip-file fileb://lambda.zip   --region us-east-1
+
+
 ```
 
 ## Exemplo de uso (requests)
@@ -67,3 +73,28 @@ curl -X POST "https://rm0t2sapef.execute-api.us-east-1.amazonaws.com/login" \
   "body": "grant_type=password&username=lucas_dell01@gmail.com&password=123456"
 }
 ```
+
+
+
+
+aws apigatewayv2 update-api  --api-id rm0t2sapef  --region us-east-1   --cors-configuration AllowOrigins="https://www.thepuregrace.com,https://thepuregrace.com,http://localhost:3487",AllowMethods="GET,POST,PUT,PATCH,DELETE,OPTIONS",AllowHeaders="authorization,content-type,origin,accept,x-requested-with",MaxAge=86400
+
+
+
+
+
+curl -i -X OPTIONS -H "Origin: https://www.thepuregrace.com" -H "Access-Control-Request-Method: POST"  https://rm0t2sapef.execute-api.us-east-1.amazonaws.com/login
+
+
+
+
+
+
+
+cd "C:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lambdas\login"
+$env:GOOS="linux" $env:GOARCH="amd64" go build -o bootstrap . Compress-Archive -Path bootstrap -DestinationPath lambda.zip -Force
+
+aws lambda update-function-code `
+  --function-name back-sorte-login `
+  --zip-file fileb://lambda.zip `
+  --region us-east-1

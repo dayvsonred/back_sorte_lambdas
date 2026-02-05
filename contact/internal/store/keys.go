@@ -41,3 +41,11 @@ func ContactPK(id string) string {
 func BankPK(id string) string {
 	return PrefixBank + id
 }
+
+func VisualizationPK(page string) string {
+	page = strings.TrimSpace(page)
+	if page == "" {
+		page = "UNKNOWN"
+	}
+	return PrefixVisualization + page
+}

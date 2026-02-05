@@ -1,6 +1,6 @@
 # Gateway Terraform
 
-Este Terraform cria **um �nico API Gateway HTTP (v2)** e integra com as Lambdas j� existentes nas pastas `users`, `login`, `donation`, `pix`, `contact`.
+Este Terraform cria **um unico API Gateway HTTP (v2)** (gateway unificado) e integra com as Lambdas ja existentes nas pastas `users`, `login`, `donation`, `pix`, `contact`.
 
 ## Pr�-requisitos
 - Terraform >= 1.3
@@ -19,3 +19,4 @@ Ao final, o endpoint do gateway ser� exibido no output `http_api_endpoint`.
 ## Observa��es
 - Esse gateway **n�o cria Lambdas**; ele apenas integra as existentes.
 - Se o `project_name` for diferente, ajuste o valor no `terraform apply`.
+

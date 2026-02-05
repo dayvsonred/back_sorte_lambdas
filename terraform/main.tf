@@ -50,7 +50,6 @@ resource "aws_lambda_function" "users" {
 
   environment {
     variables = {
-      AWS_REGION      = var.aws_region
       DYNAMODB_TABLE  = var.dynamodb_table
       AWS_BUCKET_NAME = var.aws_bucket_name
       AWS_BUCKET_NAME_IMG_DOACAO = var.aws_bucket_name_img_doacao
@@ -70,7 +69,6 @@ resource "aws_lambda_function" "login" {
 
   environment {
     variables = {
-      AWS_REGION     = var.aws_region
       DYNAMODB_TABLE = var.dynamodb_table
       JWT_SECRET     = var.jwt_secret
     }
@@ -87,7 +85,6 @@ resource "aws_lambda_function" "donation" {
 
   environment {
     variables = {
-      AWS_REGION      = var.aws_region
       DYNAMODB_TABLE  = var.dynamodb_table
       AWS_BUCKET_NAME_IMG_DOACAO = var.aws_bucket_name_img_doacao
       JWT_SECRET = var.jwt_secret
@@ -105,7 +102,6 @@ resource "aws_lambda_function" "pix" {
 
   environment {
     variables = {
-      AWS_REGION     = var.aws_region
       DYNAMODB_TABLE = var.dynamodb_table
       CLIENT_ID      = var.efi_client_id
       CLIENT_SECRET  = var.efi_client_secret
@@ -127,7 +123,6 @@ resource "aws_lambda_function" "contact" {
 
   environment {
     variables = {
-      AWS_REGION     = var.aws_region
       DYNAMODB_TABLE = var.dynamodb_table
     }
   }
@@ -136,6 +131,30 @@ resource "aws_lambda_function" "contact" {
 resource "aws_apigatewayv2_api" "http" {
   name          = "${var.project_name}-http"
   protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins = [
+      "https://www.thepuregrace.com",
+      "https://thepuregrace.com",
+      "http://localhost:3487",
+    ]
+    allow_methods = [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ]
+    allow_headers = [
+      "authorization",
+      "content-type",
+      "origin",
+      "accept",
+      "x-requested-with",
+    ]
+    max_age = 86400
+  }
 }
 
 resource "aws_apigatewayv2_integration" "users" {
@@ -179,9 +198,21 @@ resource "aws_apigatewayv2_route" "users" {
   target    = "integrations/${aws_apigatewayv2_integration.users.id}"
 }
 
+resource "aws_apigatewayv2_route" "users_base" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "ANY /users"
+  target    = "integrations/${aws_apigatewayv2_integration.users.id}"
+}
+
 resource "aws_apigatewayv2_route" "login" {
   api_id    = aws_apigatewayv2_api.http.id
   route_key = "ANY /login/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.login.id}"
+}
+
+resource "aws_apigatewayv2_route" "login_base" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "ANY /login"
   target    = "integrations/${aws_apigatewayv2_integration.login.id}"
 }
 
@@ -191,15 +222,33 @@ resource "aws_apigatewayv2_route" "donation" {
   target    = "integrations/${aws_apigatewayv2_integration.donation.id}"
 }
 
+resource "aws_apigatewayv2_route" "donation_base" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "ANY /donation"
+  target    = "integrations/${aws_apigatewayv2_integration.donation.id}"
+}
+
 resource "aws_apigatewayv2_route" "pix" {
   api_id    = aws_apigatewayv2_api.http.id
   route_key = "ANY /pix/{proxy+}"
   target    = "integrations/${aws_apigatewayv2_integration.pix.id}"
 }
 
+resource "aws_apigatewayv2_route" "pix_base" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "ANY /pix"
+  target    = "integrations/${aws_apigatewayv2_integration.pix.id}"
+}
+
 resource "aws_apigatewayv2_route" "contact" {
   api_id    = aws_apigatewayv2_api.http.id
   route_key = "ANY /contact/{proxy+}"
+  target    = "integrations/${aws_apigatewayv2_integration.contact.id}"
+}
+
+resource "aws_apigatewayv2_route" "contact_base" {
+  api_id    = aws_apigatewayv2_api.http.id
+  route_key = "ANY /contact"
   target    = "integrations/${aws_apigatewayv2_integration.contact.id}"
 }
 

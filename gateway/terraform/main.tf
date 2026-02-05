@@ -37,6 +37,30 @@ data "aws_lambda_function" "contact" {
 resource "aws_apigatewayv2_api" "http" {
   name          = "${var.project_name}-gateway-http"
   protocol_type = "HTTP"
+
+  cors_configuration {
+    allow_origins = [
+      "https://www.thepuregrace.com",
+      "https://thepuregrace.com",
+      "http://localhost:3487",
+    ]
+    allow_methods = [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "OPTIONS",
+    ]
+    allow_headers = [
+      "authorization",
+      "content-type",
+      "origin",
+      "accept",
+      "x-requested-with",
+    ]
+    max_age = 86400
+  }
 }
 
 resource "aws_apigatewayv2_integration" "users" {
