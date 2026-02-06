@@ -15,6 +15,13 @@ $env:GOOS="linux"; $env:GOARCH="amd64"; $env:CGO_ENABLED="0"; go build -o bootst
 
 ## Deploy (Terraform)
 ```powershell
+
+cd "C:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lambdas\donation\terraform"
+terraform init
+terraform apply -var "aws_region=us-east-1" -var "aws_bucket_name_img_doacao=imgs-docao-post" -var "lambda_zip=..\lambda.zip"
+
+
+
 cd "c:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lambdas\login\terraform"
 terraform init
 terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lambda_zip=../lambda.zip"
@@ -98,3 +105,14 @@ aws lambda update-function-code `
   --function-name back-sorte-login `
   --zip-file fileb://lambda.zip `
   --region us-east-1
+
+
+
+
+
+aws lambda get-function-configuration  --function-name back-sorte-donation   --region us-east-1   --query 'Role'
+
+aws s3api get-bucket-policy --bucket imgs-docao-post --region us-east-1
+
+
+
