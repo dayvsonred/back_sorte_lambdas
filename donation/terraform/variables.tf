@@ -14,7 +14,7 @@ variable "dynamodb_table" {
 
 variable "aws_bucket_name_img_doacao" {
   type    = string
-  default = ""
+  default = "imgs-docao-post-v1"
 }
 
 variable "jwt_secret" {
