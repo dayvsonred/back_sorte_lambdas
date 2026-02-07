@@ -25,21 +25,11 @@ Compress-Archive -Path bootstrap -DestinationPath lambda.zip -Force
 cd "C:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lambdas\payments\terraform"
 terraform init
 
+terraform plan -var "aws_region=us-east-1" -var "api_id=rm0t2sapef" -var "stage_name=$default" -var "lambda_zip=../lambda.zip" -var "stripe_secret_key=-----------------------------" -var "event_source_name=aws.partner/stripe.com/ed_61U7OMm8X8a9j7pji16U6BTHIq9PLmkSEfvbhl6fgPIG" -var "env=prod"
 
+terraform apply -var "aws_region=us-east-1" -var "api_id=rm0t2sapef" -var "stage_name=$default" -var "lambda_zip=../lambda.zip" -var "stripe_secret_key=---------------------------" -var "event_source_name=aws.partner/stripe.com/ed_61U7OMm8X8a9j7pji16U6BTHIq9PLmkSEfvbhl6fgPIG" -var "env=prod"
 ```
 
-## Variaveis (Terraform)
-Exemplo com `terraform.tfvars` (opcional):
-```hcl
-aws_region           = "us-east-1"
-api_id               = "rm0t2sapef"
-stage_name           = "$default"
-lambda_zip           = "../lambda.zip"
-stripe_secret_key    = "sk_live_xxx"
-event_source_name    = "aws.partner/stripe.com/ed_test_61U7NVnF35LJjMcjt16U6BTHIq9PWHU2EuOggu9rMSAq"
-env                  = "prod"
-# dynamo_table_name  = "core" (default)
-```
 
 Ordem recomendada para subir com EventBridge:
 1) Stripe Dashboard: crie o Event Destination (Amazon EventBridge).
