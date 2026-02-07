@@ -25,9 +25,6 @@ Compress-Archive -Path bootstrap -DestinationPath lambda.zip -Force
 cd "C:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lambdas\payments\terraform"
 terraform init
 
-terraform plan -var "aws_region=us-east-1" -var "api_id=rm0t2sapef" -var "stage_name=$default" -var "lambda_zip=../lambda.zip" -var "stripe_secret_key=-----------------------------" -var "event_source_name=aws.partner/stripe.com/ed_61U7OMm8X8a9j7pji16U6BTHIq9PLmkSEfvbhl6fgPIG" -var "env=prod"
-
-terraform apply -var "aws_region=us-east-1" -var "api_id=rm0t2sapef" -var "stage_name=$default" -var "lambda_zip=../lambda.zip" -var "stripe_secret_key=---------------------------" -var "event_source_name=aws.partner/stripe.com/ed_61U7OMm8X8a9j7pji16U6BTHIq9PLmkSEfvbhl6fgPIG" -var "env=prod"
 ```
 
 
