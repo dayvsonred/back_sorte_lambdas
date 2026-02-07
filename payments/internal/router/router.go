@@ -10,13 +10,15 @@ import (
 )
 
 func New(h *handlers.Handler) *mux.Router {
-	r := mux.NewRouter()
-	r.Use(utils.CorsMiddleware)
-	r.PathPrefix("/").Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	router := mux.NewRouter()
+	router.Use(utils.CorsMiddleware)
+	router.PathPrefix("/").Methods(http.MethodOptions).HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 
-	r.HandleFunc("/payments/donations", h.CreateDonation).Methods(http.MethodPost)
-	r.HandleFunc("/payments/intents", h.CreatePaymentIntent).Methods(http.MethodPost)
-	return r
+	router.HandleFunc("/payments/health", h.Health(router)).Methods(http.MethodGet)
+	router.HandleFunc("/payments/donations", h.CreateDonation).Methods(http.MethodPost)
+	router.HandleFunc("/payments/intents", h.CreatePaymentIntent).Methods(http.MethodPost)
+	router.HandleFunc("/payments/checkout-session", h.CreateCheckoutSession).Methods(http.MethodPost)
+	return router
 }

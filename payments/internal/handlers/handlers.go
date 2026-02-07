@@ -51,6 +51,18 @@ type createIntentRequest struct {
 	DonationID string `json:"donationId"`
 }
 
+type createCheckoutSessionRequest struct {
+	CampaignID string `json:"campaignId"`
+	Amount     string `json:"amount"`
+	Currency   string `json:"currency"`
+	SuccessURL string `json:"successUrl"`
+	CancelURL  string `json:"cancelUrl"`
+	Donor      struct {
+		Name  string `json:"name"`
+		Email string `json:"email"`
+	} `json:"donor"`
+}
+
 func (h *Handler) CreateDonation(w http.ResponseWriter, r *http.Request) {
 	var req createDonationRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -212,6 +224,153 @@ func (h *Handler) CreatePaymentIntent(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, map[string]string{
 		"client_secret":   pi.ClientSecret,
 		"paymentIntentId": pi.ID,
+	})
+}
+
+func (h *Handler) CreateCheckoutSession(w http.ResponseWriter, r *http.Request) {
+	var req createCheckoutSessionRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "JSON invalido")
+		return
+	}
+
+	campaignID := strings.TrimSpace(req.CampaignID)
+	if campaignID == "" {
+		utils.RespondError(w, http.StatusBadRequest, "campaignId e obrigatorio")
+		return
+	}
+
+	amountCents, err := utils.ParseAmountToCents(req.Amount)
+	if err != nil {
+		utils.RespondError(w, http.StatusBadRequest, "amount invalido: "+err.Error())
+		return
+	}
+
+	currency := strings.ToUpper(strings.TrimSpace(req.Currency))
+	if currency == "" {
+		currency = "BRL"
+	}
+	if currency != "BRL" {
+		utils.RespondError(w, http.StatusBadRequest, "currency deve ser BRL")
+		return
+	}
+
+	successURL := strings.TrimSpace(req.SuccessURL)
+	cancelURL := strings.TrimSpace(req.CancelURL)
+	if successURL == "" || cancelURL == "" {
+		utils.RespondError(w, http.StatusBadRequest, "successUrl e cancelUrl sao obrigatorios")
+		return
+	}
+
+	donorName := strings.TrimSpace(req.Donor.Name)
+	donorEmail := strings.TrimSpace(req.Donor.Email)
+	if donorName == "" || donorEmail == "" {
+		utils.RespondError(w, http.StatusBadRequest, "donor.name e donor.email sao obrigatorios")
+		return
+	}
+
+	donationID := uuid.NewString()
+	now := time.Now().UTC().Format(time.RFC3339)
+
+	item := map[string]types.AttributeValue{
+		"PK":             dynamo.S("DONATION#" + donationID),
+		"SK":             dynamo.S("DONATION#" + donationID),
+		"donationId":     dynamo.S(donationID),
+		"campaignId":     dynamo.S(campaignID),
+		"amountExpected": dynamo.N(intToString(amountCents)),
+		"currency":       dynamo.S(currency),
+		"status":         dynamo.S(string(models.DonationStatusCreated)),
+		"donorName":      dynamo.S(donorName),
+		"donorEmail":     dynamo.S(donorEmail),
+		"createdAt":      dynamo.S(now),
+		"updatedAt":      dynamo.S(now),
+	}
+
+	if err := h.Store.PutItem(r.Context(), item); err != nil {
+		h.Log.Error("erro_ao_salvar_donation", map[string]interface{}{"error": err.Error()})
+		utils.RespondError(w, http.StatusInternalServerError, "erro ao salvar donation")
+		return
+	}
+
+	session, err := h.Stripe.CreateCheckoutSession(
+		r.Context(),
+		amountCents,
+		strings.ToLower(currency),
+		donationID,
+		campaignID,
+		donorName,
+		donorEmail,
+		successURL,
+		cancelURL,
+	)
+	if err != nil {
+		h.Log.Error("erro_criar_checkout_session", map[string]interface{}{"error": err.Error(), "donationId": donationID})
+		utils.RespondError(w, http.StatusBadGateway, "erro ao criar checkout session")
+		return
+	}
+
+	paymentIntentID := ""
+	if session.PaymentIntent != nil {
+		paymentIntentID = session.PaymentIntent.ID
+	}
+	if paymentIntentID == "" {
+		h.Log.Error("checkout_sem_payment_intent", map[string]interface{}{"donationId": donationID, "sessionId": session.ID})
+		utils.RespondError(w, http.StatusBadGateway, "checkout session sem payment intent")
+		return
+	}
+
+	createdAtStripe := time.Unix(session.Created, 0).UTC().Format(time.RFC3339)
+	paymentItem := map[string]types.AttributeValue{
+		"PK":              dynamo.S("PAYMENT#" + paymentIntentID),
+		"SK":              dynamo.S("DONATION#" + donationID),
+		"paymentIntentId": dynamo.S(paymentIntentID),
+		"donationId":      dynamo.S(donationID),
+		"campaignId":      dynamo.S(campaignID),
+		"amount":          dynamo.N(intToString(amountCents)),
+		"currency":        dynamo.S(currency),
+		"status":          dynamo.S(string(models.PaymentStatusPending)),
+		"createdAtStripe": dynamo.S(createdAtStripe),
+		"createdAt":       dynamo.S(now),
+		"updatedAt":       dynamo.S(now),
+	}
+
+	updateDonation := types.TransactWriteItem{
+		Update: &types.Update{
+			TableName: aws.String(h.Store.TableName()),
+			Key: map[string]types.AttributeValue{
+				"PK": dynamo.S("DONATION#" + donationID),
+				"SK": dynamo.S("DONATION#" + donationID),
+			},
+			UpdateExpression: aws.String("SET #status = :status, #updatedAt = :updatedAt"),
+			ExpressionAttributeNames: map[string]string{
+				"#status":    "status",
+				"#updatedAt": "updatedAt",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":status":    dynamo.S(string(models.DonationStatusPendingPayment)),
+				":updatedAt": dynamo.S(now),
+			},
+		},
+	}
+
+	putPayment := types.TransactWriteItem{
+		Put: &types.Put{
+			TableName: aws.String(h.Store.TableName()),
+			Item:      paymentItem,
+		},
+	}
+
+	if err := h.Store.TransactWrite(r.Context(), []types.TransactWriteItem{putPayment, updateDonation}); err != nil {
+		h.Log.Error("erro_ao_salvar_payment", map[string]interface{}{"error": err.Error(), "paymentIntentId": paymentIntentID})
+		utils.RespondError(w, http.StatusInternalServerError, "erro ao salvar payment")
+		return
+	}
+
+	h.Log.Info("checkout_session_criada", map[string]interface{}{"donationId": donationID, "sessionId": session.ID})
+	utils.RespondJSON(w, http.StatusOK, map[string]string{
+		"url":             session.URL,
+		"donationId":      donationID,
+		"paymentIntentId": paymentIntentID,
 	})
 }
 
