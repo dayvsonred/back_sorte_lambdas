@@ -9,7 +9,9 @@ def handler(event, context):
     table_name = os.environ["TABLE_NAME"]
     bucket_name = os.environ["BUCKET_NAME"]
     prefix_base = os.environ.get("EXPORT_PREFIX_BASE", "exports/core")
-    export_format = os.environ.get("EXPORT_FORMAT", "AMAZON_ION")
+    export_format = os.environ.get("EXPORT_FORMAT", "ION")
+    if export_format == "AMAZON_ION":
+        export_format = "ION"
 
     dynamodb = boto3.client("dynamodb")
     table = dynamodb.describe_table(TableName=table_name)

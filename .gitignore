@@ -48,3 +48,11 @@ go.work.sum
 **/*.zip
 
 payments/README.md
+
+# Painel local data/artifacts
+painel/data/raw/
+painel/data/curated/
+painel/data/dashboard.duckdb
+painel/.venv/
+painel/__pycache__/
+painel/*.pyc

@@ -30,8 +30,12 @@ variable "export_retention_days" {
 
 variable "export_format" {
   type        = string
-  description = "DynamoDB export format."
-  default     = "AMAZON_ION"
+  description = "DynamoDB export format (ION or DYNAMODB_JSON)."
+  default     = "DYNAMODB_JSON"
+  validation {
+    condition     = contains(["ION", "DYNAMODB_JSON", "AMAZON_ION"], var.export_format)
+    error_message = "export_format must be ION or DYNAMODB_JSON (AMAZON_ION is accepted for backward compatibility)."
+  }
 }
 
 variable "schedule_expression" {

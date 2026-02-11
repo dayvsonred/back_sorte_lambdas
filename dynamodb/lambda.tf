@@ -40,6 +40,22 @@ resource "aws_iam_policy" "export_lambda" {
           "logs:PutLogEvents"
         ]
         Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:GetBucketLocation",
+          "s3:ListBucket"
+        ]
+        Resource = aws_s3_bucket.dynamodb_exports.arn
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:AbortMultipartUpload"
+        ]
+        Resource = "${aws_s3_bucket.dynamodb_exports.arn}/${var.export_prefix_base}/*"
       }
     ]
   })

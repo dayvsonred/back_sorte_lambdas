@@ -30,7 +30,7 @@ terraform apply -var "aws_region=us-east-1"
 - `s3_bucket_name` (default: bd-thepuregrace-v1-dinamodb-core)
 - `export_prefix_base` (default: exports/core)
 - `export_retention_days` (default: 30)
-- `export_format` (default: AMAZON_ION)
+- `export_format` (default: ION; valid values: ION or DYNAMODB_JSON)
 - `schedule_expression` (default: cron(10 6 * * ? *) -> 03:10 America/Sao_Paulo)
 - `enable_pitr` (default: true)
 - `tags` (opcional)
@@ -48,4 +48,17 @@ terraform apply -var "aws_region=us-east-1" -var "table_name=core" -var "export_
 ### Destruir com seguranca
 ```powershell
 terraform destroy -var "aws_region=us-east-1"
+```
+
+
+
+### Invoque lambda exporta BD 
+```powershell
+aws lambda invoke   --region us-east-1   --function-name dynamodb-export-core   --invocation-type RequestResponse   --cli-binary-format raw-in-base64-out   --payload "{}"   .\response.json; Get-Content .\response.json
+
+```
+### Invoque lambda exporta BD  STATUS
+```powershell
+aws dynamodb describe-export   --region us-east-1   --export-arn arn:aws:dynamodb:us-east-1:727646486460:table/core/export/01770818721189-41bdd96a
+
 ```
