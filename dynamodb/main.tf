@@ -1,9 +1,13 @@
 terraform {
-  required_version = ">= 1.3.0"
+  required_version = ">= 1.5.0"
   required_providers {
     aws = {
       source  = "hashicorp/aws"
       version = ">= 5.0"
+    }
+    archive = {
+      source  = "hashicorp/archive"
+      version = ">= 2.4.0"
     }
   }
 }
@@ -11,6 +15,8 @@ terraform {
 provider "aws" {
   region = var.aws_region
 }
+
+data "aws_caller_identity" "current" {}
 
 resource "aws_dynamodb_table" "core" {
   name         = var.table_name
@@ -68,6 +74,10 @@ resource "aws_dynamodb_table" "core" {
     projection_type    = "ALL"
     read_capacity      = 7
     write_capacity     = 7
+  }
+
+  point_in_time_recovery {
+    enabled = var.enable_pitr
   }
 
   tags = var.tags
