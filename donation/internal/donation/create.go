@@ -149,6 +149,16 @@ func DonationHandler(storeDDB *dynamo.Store) http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		donationLink := buildDonationPublicLink(nomeLink)
+		email, recipientName, err := lookupUserContact(ctx, storeDDB, idUser)
+		if err != nil {
+			fmt.Printf("aviso: falha ao buscar contato do usuario %s para envio de email: %v\n", idUser, err)
+		} else {
+			if err := sendDonationCreatedEmailEvent(ctx, idUser, recipientName, email, donationID, name, donationLink); err != nil {
+				fmt.Printf("aviso: falha ao publicar evento de email da doacao %s: %v\n", donationID, err)
+			}
+		}
+
 		json.NewEncoder(w).Encode(map[string]string{
 			"message":   "Doacao criada com sucesso",
 			"id":        donationID,
@@ -323,6 +333,14 @@ func DonationCreateSimpleHandler(storeDDB *dynamo.Store) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, "Erro ao salvar dados: "+err.Error(), http.StatusInternalServerError)
 			return
+		}
+
+		donationLink := buildDonationPublicLink(nomeLink)
+		if err := sendEmailVerificationEvent(ctx, userID, fullName, email, donationID, titulo, donationLink); err != nil {
+			fmt.Printf("aviso: falha ao publicar evento de validacao de email do usuario %s: %v\n", userID, err)
+		}
+		if err := sendDonationCreatedEmailEvent(ctx, userID, fullName, email, donationID, titulo, donationLink); err != nil {
+			fmt.Printf("aviso: falha ao publicar evento de email da doacao %s: %v\n", donationID, err)
 		}
 
 		w.Header().Set("Content-Type", "application/json")

@@ -10,7 +10,18 @@ $env:GOOS="linux"; $env:GOARCH="amd64"; $env:CGO_ENABLED="0"; go build -o bootst
 ```powershell
 cd "c:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lambdas\donation\terraform"
 terraform init
-terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lambda_zip=../lambda.zip" -var "aws_bucket_name_img_doacao=imgs-docao-post-v1"
+terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lambda_zip=../lambda.zip" -var "aws_bucket_name_img_doacao=imgs-docao-post-v1" -var "email_events_queue_name=donation-email-events" -var "app_base_url=https://www.thepuregrace.com"
+```
+
+## Email assíncrono (SQS)
+- Este módulo cria a fila SQS `donation-email-events`.
+- As rotas `POST /donation` e `POST /donation/createUserAndDonation` publicam eventos de e-mail nessa fila.
+- A lambda `donation-email-send` (módulo separado) consome a fila e envia os e-mails via SES.
+
+### Outputs úteis
+```powershell
+terraform output email_events_queue_arn
+terraform output email_events_queue_url
 ```
 
 ## Exemplo de uso (requests)

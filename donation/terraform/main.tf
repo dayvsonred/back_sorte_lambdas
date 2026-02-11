@@ -65,19 +65,45 @@ resource "aws_iam_role_policy" "lambda_s3_upload" {
   })
 }
 
+resource "aws_sqs_queue" "email_events" {
+  name                       = var.email_events_queue_name
+  visibility_timeout_seconds = 120
+  message_retention_seconds  = 1209600
+}
+
+resource "aws_iam_role_policy" "lambda_sqs_publish" {
+  name = "${var.project_name}-donation-sqs-publish"
+  role = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:SendMessage"
+        ]
+        Resource = aws_sqs_queue.email_events.arn
+      }
+    ]
+  })
+}
+
 resource "aws_lambda_function" "donation" {
-  function_name = "${var.project_name}-donation"
-  role          = aws_iam_role.lambda_role.arn
-  handler       = "bootstrap"
-  runtime       = "provided.al2"
-  filename      = var.lambda_zip
+  function_name    = "${var.project_name}-donation"
+  role             = aws_iam_role.lambda_role.arn
+  handler          = "bootstrap"
+  runtime          = "provided.al2"
+  filename         = var.lambda_zip
   source_code_hash = filebase64sha256(var.lambda_zip)
 
   environment {
     variables = {
-      DYNAMODB_TABLE  = var.dynamodb_table
+      DYNAMODB_TABLE             = var.dynamodb_table
       AWS_BUCKET_NAME_IMG_DOACAO = var.aws_bucket_name_img_doacao
-      JWT_SECRET = var.jwt_secret
+      JWT_SECRET                 = var.jwt_secret
+      EMAIL_EVENTS_QUEUE_URL     = aws_sqs_queue.email_events.url
+      APP_BASE_URL               = var.app_base_url
     }
   }
 }

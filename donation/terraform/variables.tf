@@ -25,3 +25,13 @@ variable "jwt_secret" {
 variable "lambda_zip" {
   type = string
 }
+
+variable "email_events_queue_name" {
+  type    = string
+  default = "donation-email-events"
+}
+
+variable "app_base_url" {
+  type    = string
+  default = "https://www.thepuregrace.com"
+}

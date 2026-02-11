@@ -106,6 +106,22 @@ Este documento traduz o schema atual do PostgreSQL para Single Table Design no D
   - SK: `DETAIL`
   - Campos: nome, email, mensagem, ip, location, token, view, data_create
 
+### Email automacao (doacao)
+- Cota diaria de envio
+  - PK: `EMAIL#QUOTA#{yyyy-mm-dd}`
+  - SK: `COUNTER`
+  - Campos: send_count, date_update
+
+- Pendencias de envio (quando atingir limite diario)
+  - PK: `EMAIL#PENDING`
+  - SK: `TS#{epochMs}#{id}`
+  - Campos: status, payload, attempts, next_attempt_at, date_create, date_update
+
+- Token de confirmacao de e-mail
+  - PK: `EMAIL#VERIFY#{token}`
+  - SK: `USER#{userId}`
+  - Campos: user_id, email, donation_id, used, date_create, expires_at
+
 ## Observacoes de acesso (rotas atuais)
 - Login / busca por email: usar GSI2 em item USER#... (EMAIL#)
 - Listar doacoes por usuario: GSI1PK=USER#id

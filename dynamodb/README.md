@@ -45,6 +45,12 @@ terraform apply -var "aws_region=us-east-1" -var "table_name=core" -var "export_
 - CloudWatch Logs da Lambda `dynamodb-export-core`
 - S3: prefixos em `exports/core/YYYY-MM-DD/`
 
+### Uso da tabela `core` para automacao de e-mail
+- A automacao de e-mails da doacao usa a propria tabela `core` (single-table), sem criar nova tabela:
+  - `PK=EMAIL#QUOTA#YYYY-MM-DD`, `SK=COUNTER` (controle de cota diaria)
+  - `PK=EMAIL#PENDING`, `SK=TS#...` (fila de pendencias para reprocesso)
+  - `PK=EMAIL#VERIFY#{token}`, `SK=USER#{id}` (token de validacao de e-mail)
+
 ### Destruir com seguranca
 ```powershell
 terraform destroy -var "aws_region=us-east-1"

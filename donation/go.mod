@@ -11,13 +11,12 @@ require (
 	github.com/google/uuid v1.5.0 // Para geração de UUIDs
 	github.com/gorilla/mux v1.8.1
 	github.com/joho/godotenv v1.5.1
-	github.com/lib/pq v1.10.9 // Driver PostgreSQL
 	golang.org/x/crypto v0.32.0
 )
 
 require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.20.31
-	github.com/efipay/sdk-go-apis-efi v0.0.0-20231207185217-6dca10834f8f
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.21
 	golang.org/x/text v0.26.0
 )
 
