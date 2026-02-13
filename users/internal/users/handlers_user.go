@@ -4,6 +4,7 @@ import (
 	"BACK_SORTE_GO/internal/store"
 	"BACK_SORTE_GO/internal/store/dynamo"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -127,6 +128,10 @@ func CreateUserHandler(storeDDB *dynamo.Store) http.HandlerFunc {
 		if err != nil {
 			http.Error(w, "Erro ao criar o usuario: "+err.Error(), http.StatusInternalServerError)
 			return
+		}
+
+		if err := sendUserEmailVerificationEvent(ctx, userID, req.Name, req.Email); err != nil {
+			fmt.Printf("aviso: falha ao publicar evento de validacao de email do usuario %s: %v\n", userID, err)
 		}
 
 		jsonResponse(w, http.StatusCreated, map[string]string{

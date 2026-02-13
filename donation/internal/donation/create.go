@@ -339,6 +339,9 @@ func DonationCreateSimpleHandler(storeDDB *dynamo.Store) http.HandlerFunc {
 		if err := sendEmailVerificationEvent(ctx, userID, fullName, email, donationID, titulo, donationLink); err != nil {
 			fmt.Printf("aviso: falha ao publicar evento de validacao de email do usuario %s: %v\n", userID, err)
 		}
+		if err := sendDonationCreatedEmailEvent(ctx, userID, fullName, email, donationID, titulo, donationLink); err != nil {
+			fmt.Printf("aviso: falha ao publicar evento de email da doacao %s: %v\n", donationID, err)
+		}
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(map[string]interface{}{

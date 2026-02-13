@@ -35,3 +35,13 @@ variable "password_reset_key" {
 variable "lambda_zip" {
   type = string
 }
+
+variable "email_events_queue_url" {
+  type    = string
+  default = ""
+}
+
+variable "email_events_queue_arn" {
+  type    = string
+  default = ""
+}

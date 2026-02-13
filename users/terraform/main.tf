@@ -40,6 +40,25 @@ resource "aws_iam_role_policy_attachment" "lambda_s3" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
+resource "aws_iam_role_policy" "lambda_sqs_publish" {
+  count = var.email_events_queue_arn == "" ? 0 : 1
+  name  = "${var.project_name}-users-sqs-publish"
+  role  = aws_iam_role.lambda_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "sqs:SendMessage"
+        ]
+        Resource = var.email_events_queue_arn
+      }
+    ]
+  })
+}
+
 resource "aws_lambda_function" "users" {
   function_name = "${var.project_name}-users"
   role          = aws_iam_role.lambda_role.arn
@@ -55,6 +74,7 @@ resource "aws_lambda_function" "users" {
       AWS_BUCKET_NAME_IMG_DOACAO = var.aws_bucket_name_img_doacao
       PASSWORD_RESET_KEY = var.password_reset_key
       JWT_SECRET = var.jwt_secret
+      EMAIL_EVENTS_QUEUE_URL = var.email_events_queue_url
     }
   }
 }

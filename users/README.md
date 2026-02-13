@@ -10,7 +10,7 @@ $env:GOOS="linux"; $env:GOARCH="amd64"; $env:CGO_ENABLED="0"; go build -o bootst
 ```powershell
 cd "c:\Users\niore\Documents\projeto sorteio doacao\back_sorte_go\back_sorte_lambdas\users\terraform"
 terraform init
-terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lambda_zip=../lambda.zip"
+terraform apply -var "aws_region=us-east-1" -var "dynamodb_table=core" -var "lambda_zip=../lambda.zip" -var "email_events_queue_url=https://sqs.us-east-1.amazonaws.com/123456789012/donation-email-events" -var "email_events_queue_arn=arn:aws:sqs:us-east-1:123456789012:donation-email-events"
 ```
 
 ## Exemplo de uso (requests)
