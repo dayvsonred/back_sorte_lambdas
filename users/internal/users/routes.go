@@ -12,6 +12,7 @@ func RegisterRoutes(router *mux.Router, a *app.App) {
 	router.HandleFunc("/users/passwordRecover", UserPasswordRecoverStartHandler(a.Store)).Methods("POST")
 	router.HandleFunc("/users/passwordConfirmToken", UserPasswordRecoverConfirmHandler(a.Store)).Methods("POST")
 	router.HandleFunc("/users/passwordRecoverLink", UserPasswordRecoverLinkHandler(a.Store)).Methods("GET")
+	router.HandleFunc("/users/confirmEmail", UserConfirmEmailHandler(a.Store)).Methods("GET")
 	router.HandleFunc("/users/bankAccount", UserBankAccountHandler(a.Store)).Methods("POST")
 	router.HandleFunc("/users/bankAccount", UserBankAccountUpdateHandler(a.Store)).Methods("PATCH")
 	router.HandleFunc("/users/bankAccount", UserBankAccountGetHandler(a.Store)).Methods("GET")

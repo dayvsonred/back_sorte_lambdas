@@ -334,7 +334,12 @@ func buildEmailContent(ctx context.Context, payload emailEvent) (string, string,
 		if err != nil {
 			return "", "", err
 		}
-		confirmURL := fmt.Sprintf("%s/confirmar-email?token=%s", cfg.appBaseURL, token)
+		confirmURL := fmt.Sprintf(
+			"%s/auth/email-confirmation?email=%s&token=%s",
+			cfg.appBaseURL,
+			url.QueryEscape(strings.TrimSpace(payload.RecipientEmail)),
+			url.QueryEscape(token),
+		)
 		subject := "Confirme seu e-mail - The Pure Grace"
 		body := fmt.Sprintf(
 			"Oi %s,\n\nSeu cadastro foi criado com sucesso.\n\nConfirme seu e-mail clicando no link:\n%s\n\nApos confirmar, voce pode acompanhar sua doacao no sistema.\n\nEquipe The Pure Grace",
