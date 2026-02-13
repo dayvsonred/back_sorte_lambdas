@@ -88,6 +88,9 @@ resource "aws_lambda_function" "email_send" {
       SES_FROM_EMAIL    = var.ses_from_email
       APP_BASE_URL      = var.app_base_url
       DAILY_EMAIL_LIMIT = tostring(var.daily_email_limit)
+      EMAIL_PROVIDER    = var.email_provider
+      BREVO_API_KEY     = var.brevo_api_key
+      EMAIL_FROM_NAME   = var.email_from_name
     }
   }
 }

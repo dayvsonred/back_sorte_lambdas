@@ -1,11 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"strconv"
@@ -46,8 +49,11 @@ type appConfig struct {
 	region          string
 	tableName       string
 	fromEmail       string
+	fromName        string
 	appBaseURL      string
 	dailyEmailLimit int
+	emailProvider   string
+	brevoAPIKey     string
 }
 
 var (
@@ -64,8 +70,11 @@ func loadConfig(ctx context.Context) error {
 			region:          env("AWS_REGION", "us-east-1"),
 			tableName:       os.Getenv("DYNAMODB_TABLE"),
 			fromEmail:       os.Getenv("SES_FROM_EMAIL"),
+			fromName:        env("EMAIL_FROM_NAME", "The Pure Grace"),
 			appBaseURL:      strings.TrimRight(env("APP_BASE_URL", "https://www.thepuregrace.com"), "/"),
 			dailyEmailLimit: envInt("DAILY_EMAIL_LIMIT", 199),
+			emailProvider:   strings.ToLower(env("EMAIL_PROVIDER", "ses")),
+			brevoAPIKey:     strings.TrimSpace(os.Getenv("BREVO_API_KEY")),
 		}
 		if cfg.tableName == "" {
 			initErr = fmt.Errorf("DYNAMODB_TABLE nao definido")
@@ -75,6 +84,10 @@ func loadConfig(ctx context.Context) error {
 			initErr = fmt.Errorf("SES_FROM_EMAIL nao definido")
 			return
 		}
+		if cfg.emailProvider == "brevo" && cfg.brevoAPIKey == "" {
+			initErr = fmt.Errorf("BREVO_API_KEY nao definido para EMAIL_PROVIDER=brevo")
+			return
+		}
 
 		awsCfg, err := awsconfig.LoadDefaultConfig(ctx, awsconfig.WithRegion(cfg.region))
 		if err != nil {
@@ -82,7 +95,9 @@ func loadConfig(ctx context.Context) error {
 			return
 		}
 		ddb = dynamodb.NewFromConfig(awsCfg)
-		ses = sesv2.NewFromConfig(awsCfg)
+		if cfg.emailProvider == "ses" {
+			ses = sesv2.NewFromConfig(awsCfg)
+		}
 	})
 	return initErr
 }
@@ -210,26 +225,99 @@ func trySendEmail(ctx context.Context, payload emailEvent) (bool, error) {
 		return false, err
 	}
 
-	_, err = ses.SendEmail(ctx, &sesv2.SendEmailInput{
-		FromEmailAddress: strPtr(cfg.fromEmail),
-		Destination: &sestypes.Destination{
-			ToAddresses: []string{payload.RecipientEmail},
-		},
-		Content: &sestypes.EmailContent{
-			Simple: &sestypes.Message{
-				Subject: &sestypes.Content{Data: strPtr(subject)},
-				Body: &sestypes.Body{
-					Text: &sestypes.Content{Data: strPtr(bodyText)},
-				},
-			},
-		},
-	})
+	err = sendEmailWithProvider(ctx, payload, subject, bodyText)
 	if err != nil {
-		return false, fmt.Errorf("erro SES SendEmail: %w", err)
+		return false, err
 	}
 
 	log.Printf("email enviado: type=%s to=%s donation_id=%s", payload.Type, payload.RecipientEmail, payload.DonationID)
 	return true, nil
+}
+
+func sendEmailWithProvider(ctx context.Context, payload emailEvent, subject, bodyText string) error {
+	switch cfg.emailProvider {
+	case "ses":
+		_, err := ses.SendEmail(ctx, &sesv2.SendEmailInput{
+			FromEmailAddress: strPtr(cfg.fromEmail),
+			Destination: &sestypes.Destination{
+				ToAddresses: []string{payload.RecipientEmail},
+			},
+			Content: &sestypes.EmailContent{
+				Simple: &sestypes.Message{
+					Subject: &sestypes.Content{Data: strPtr(subject)},
+					Body: &sestypes.Body{
+						Text: &sestypes.Content{Data: strPtr(bodyText)},
+					},
+				},
+			},
+		})
+		if err != nil {
+			return fmt.Errorf("erro SES SendEmail: %w", err)
+		}
+		return nil
+
+	case "brevo":
+		return sendEmailBrevo(ctx, payload, subject, bodyText)
+
+	default:
+		return fmt.Errorf("EMAIL_PROVIDER invalido: %s", cfg.emailProvider)
+	}
+}
+
+func sendEmailBrevo(ctx context.Context, payload emailEvent, subject, bodyText string) error {
+	type brevoContact struct {
+		Email string `json:"email"`
+		Name  string `json:"name,omitempty"`
+	}
+	type brevoSender struct {
+		Email string `json:"email"`
+		Name  string `json:"name,omitempty"`
+	}
+	type brevoSendEmailRequest struct {
+		Sender      brevoSender    `json:"sender"`
+		To          []brevoContact `json:"to"`
+		Subject     string         `json:"subject"`
+		TextContent string         `json:"textContent"`
+	}
+
+	reqBody := brevoSendEmailRequest{
+		Sender: brevoSender{
+			Email: cfg.fromEmail,
+			Name:  cfg.fromName,
+		},
+		To: []brevoContact{{
+			Email: payload.RecipientEmail,
+			Name:  emptyIf(payload.RecipientName, "usuario"),
+		}},
+		Subject:     subject,
+		TextContent: bodyText,
+	}
+
+	buf, err := json.Marshal(reqBody)
+	if err != nil {
+		return fmt.Errorf("erro ao serializar payload Brevo: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.brevo.com/v3/smtp/email", bytes.NewReader(buf))
+	if err != nil {
+		return fmt.Errorf("erro ao criar request Brevo: %w", err)
+	}
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("content-type", "application/json")
+	req.Header.Set("api-key", cfg.brevoAPIKey)
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("erro ao chamar Brevo: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 2048))
+		return fmt.Errorf("erro Brevo status=%d body=%s", resp.StatusCode, strings.TrimSpace(string(respBody)))
+	}
+
+	return nil
 }
 
 func buildEmailContent(ctx context.Context, payload emailEvent) (string, string, error) {

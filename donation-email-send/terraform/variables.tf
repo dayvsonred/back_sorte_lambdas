@@ -34,6 +34,22 @@ variable "daily_email_limit" {
   default = 199
 }
 
+variable "email_provider" {
+  type    = string
+  default = "ses"
+}
+
+variable "brevo_api_key" {
+  type      = string
+  default   = ""
+  sensitive = true
+}
+
+variable "email_from_name" {
+  type    = string
+  default = "The Pure Grace"
+}
+
 variable "pending_schedule_expression" {
   type    = string
   default = "cron(0 10 * * ? *)"
