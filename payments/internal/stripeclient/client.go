@@ -56,7 +56,7 @@ func (c *Client) CreateCheckoutSession(
 					Currency:   stripe.String(currency),
 					UnitAmount: stripe.Int64(amount),
 					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
-						Name: stripe.String("Doacao"),
+						Name: stripe.String("Donation"),
 					},
 				},
 			},
