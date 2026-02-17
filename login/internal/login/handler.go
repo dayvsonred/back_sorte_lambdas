@@ -1,4 +1,4 @@
-﻿package login
+package login
 
 import (
 	"encoding/json"
@@ -39,6 +39,7 @@ type userItem struct {
 	Active     bool   `dynamodbav:"active"`
 	Inicial    bool   `dynamodbav:"inicial"`
 	Dell       bool   `dynamodbav:"dell"`
+	Blocked    bool   `dynamodbav:"blocked"`
 	DateCreate string `dynamodbav:"date_create"`
 }
 
@@ -113,6 +114,10 @@ func LoginHandler(storeDDB *dynamo.Store) http.HandlerFunc {
 
 		if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password)); err != nil {
 			http.Error(w, "Usuario ou senha invalidos", http.StatusUnauthorized)
+			return
+		}
+		if user.Blocked {
+			http.Error(w, "Usuario bloqueado", http.StatusForbidden)
 			return
 		}
 
@@ -194,4 +199,3 @@ func parseTimeOrNow(value string) time.Time {
 	}
 	return time.Now()
 }
-
