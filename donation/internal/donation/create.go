@@ -5,6 +5,7 @@ import (
 	"BACK_SORTE_GO/internal/store"
 	"BACK_SORTE_GO/internal/store/dynamo"
 	"BACK_SORTE_GO/utils"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -56,6 +57,16 @@ func DonationHandler(storeDDB *dynamo.Store) http.HandlerFunc {
 
 		if idUser == "" || name == "" || valorStr == "" || texto == "" || area == "" {
 			http.Error(w, "Todos os campos sao obrigatorios", http.StatusBadRequest)
+			return
+		}
+
+		maxDonations, currentDonations, err := getUserDonationQuotaAndCount(r.Context(), storeDDB, idUser)
+		if err != nil {
+			http.Error(w, "Erro ao validar limite de doacoes: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if currentDonations >= maxDonations {
+			http.Error(w, fmt.Sprintf("Limite de doacoes atingido (%d)", maxDonations), http.StatusForbidden)
 			return
 		}
 
@@ -218,20 +229,21 @@ func DonationCreateSimpleHandler(storeDDB *dynamo.Store) http.HandlerFunc {
 		now := time.Now().Format(time.RFC3339)
 
 		userItem := map[string]types.AttributeValue{
-			"PK":          dynamo.S(store.UserPK(userID)),
-			"SK":          dynamo.S("PROFILE"),
-			"GSI2PK":      dynamo.S("EMAIL#" + strings.ToLower(email)),
-			"GSI2SK":      dynamo.S(store.UserPK(userID)),
-			"id":          dynamo.S(userID),
-			"name":        dynamo.S(fullName),
-			"email":       dynamo.S(email),
-			"password":    dynamo.S(string(hashedPassword)),
-			"cpf":         dynamo.S(cpf),
-			"active":      dynamo.B(true),
-			"inicial":     dynamo.B(false),
-			"dell":        dynamo.B(false),
-			"date_create": dynamo.S(now),
-			"date_update": dynamo.S(now),
+			"PK":            dynamo.S(store.UserPK(userID)),
+			"SK":            dynamo.S("PROFILE"),
+			"GSI2PK":        dynamo.S("EMAIL#" + strings.ToLower(email)),
+			"GSI2SK":        dynamo.S(store.UserPK(userID)),
+			"id":            dynamo.S(userID),
+			"name":          dynamo.S(fullName),
+			"email":         dynamo.S(email),
+			"password":      dynamo.S(string(hashedPassword)),
+			"cpf":           dynamo.S(cpf),
+			"active":        dynamo.B(true),
+			"inicial":       dynamo.B(false),
+			"dell":          dynamo.B(false),
+			"max_donations": dynamo.N("10"),
+			"date_create":   dynamo.S(now),
+			"date_update":   dynamo.S(now),
 		}
 
 		contaNivelItem := map[string]types.AttributeValue{
@@ -352,4 +364,58 @@ func DonationCreateSimpleHandler(storeDDB *dynamo.Store) http.HandlerFunc {
 			"img":       imgPath,
 		})
 	}
+}
+
+const defaultMaxDonations = 10
+
+func getUserDonationQuotaAndCount(ctx context.Context, storeDDB *dynamo.Store, userID string) (int, int, error) {
+	userItem, err := storeDDB.GetItem(ctx, store.UserPK(userID), "PROFILE")
+	if err != nil {
+		return 0, 0, err
+	}
+	if len(userItem) == 0 {
+		return 0, 0, fmt.Errorf("usuario nao encontrado")
+	}
+
+	maxDonations := defaultMaxDonations
+	if maxAttr, ok := userItem["max_donations"]; ok {
+		if n, ok := maxAttr.(*types.AttributeValueMemberN); ok {
+			if parsed, err := strconv.Atoi(n.Value); err == nil && parsed > 0 {
+				maxDonations = parsed
+			}
+		}
+	} else {
+		now := time.Now().Format(time.RFC3339)
+		err = storeDDB.UpdateItem(ctx,
+			map[string]types.AttributeValue{
+				"PK": dynamo.S(store.UserPK(userID)),
+				"SK": dynamo.S("PROFILE"),
+			},
+			"SET max_donations = if_not_exists(max_donations, :max), date_update = :du",
+			nil,
+			map[string]types.AttributeValue{
+				":max": dynamo.N(strconv.Itoa(defaultMaxDonations)),
+				":du":  dynamo.S(now),
+			},
+		)
+		if err != nil {
+			return 0, 0, err
+		}
+	}
+
+	countOut, err := storeDDB.Query(ctx, &dynamodb.QueryInput{
+		IndexName:              aws.String("GSI1"),
+		KeyConditionExpression: aws.String("GSI1PK = :pk AND begins_with(GSI1SK, :skPrefix)"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":pk":       dynamo.S(store.UserPK(userID)),
+			":skPrefix": dynamo.S("DONATION#"),
+		},
+		Select: types.SelectCount,
+		Limit:  aws.Int32(int32(maxDonations + 1)),
+	})
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return maxDonations, int(countOut.Count), nil
 }
